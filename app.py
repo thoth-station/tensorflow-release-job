@@ -463,9 +463,8 @@ class TensorflowBuildTrigger:
             return False
 
     def main(self):
-        print("BUILD_MAP:", self.BUILD_MAP, type(self.BUILD_MAP))
         if self.BUILD_MAP:
-            for py_version, os_detail in self.BUILD_MAP.items():
+            for py_version, os_detail in json.loads(self.BUILD_MAP).items():
                 for os_version, os_registry in os_detail.items():
                     application_build_name = "tf-{}-build-image-{}".format(os_version.lower(),
                                                                            py_version.replace('.', ''))

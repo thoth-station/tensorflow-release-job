@@ -36,17 +36,17 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: OCP_URL
-                name: ${OCP_SECRET}
+                name: "${OCP_SECRET}"
           - name: OCP_NAMESPACE
             valueFrom:
               secretKeyRef:
                 key: OCP_NAMESPACE
-                name: ${OCP_SECRET}
+                name: "${OCP_SECRET}"
           - name: OCP_TOKEN
             valueFrom:
               secretKeyRef:
                 key: OCP_TOKEN
-                name: ${OCP_SECRET}
+                name: "${OCP_SECRET}"
           - name: BAZEL_VERSION
             value: "${BAZEL_VERSION}"
           - name: CUSTOM_BUILD
@@ -126,14 +126,12 @@ objects:
         lookupPolicy:
           local: true
 parameters:
-  # OpenShift Variables
   - name: OCP_SECRET
-    description: "Name of the secret config on openshift"
+    description: Name of the secret config on openshift
     required: true
-  # Tensorflow Build Variables
   - name: SOURCE_REPOSITORY
     description: Git repository for source.
-    value: https://github.com/thoth-station/tensorflow-build-s2i.git
+    value: 'https://github.com/thoth-station/tensorflow-build-s2i.git'
     required: true
   - name: BAZEL_VERSION
     description: BAZEL_VERSION
@@ -147,7 +145,6 @@ parameters:
     description: Version of the build image, i.e docker image tag
     value: latest
     required: true
-  # Tensorflow Job Variables
   - name: CUSTOM_BUILD
     description: Set to custom BUILD command
     value: bazel build --copt=-mavx --copt=-mavx2 --copt=-mfma --copt=-mfpmath=both
@@ -164,7 +161,7 @@ parameters:
     required: false
   - name: TF_CUDA_COMPUTE_CAPABILITIES
     description: TF_CUDA_COMPUTE_CAPABILITIES depends on TF_NEED_CUDA
-    value: 3.0,3.5,5.2,6.0,6.1,7.0
+    value: '3.0,3.5,5.2,6.0,6.1,7.0'
     required: false
   - name: TF_CUDNN_VERSION
     description: TF_CUDNN_VERSION depends on TF_NEED_CUDA
@@ -172,15 +169,15 @@ parameters:
     required: false
   - name: CUDA_TOOLKIT_PATH
     description: CUDA_TOOLKIT_PATH depends on TF_NEED_CUDA
-    value: "/usr/local/cuda"
+    value: '/usr/local/cuda'
     required: true
   - name: CUDNN_INSTALL_PATH
     description: CUDNN_INSTALL_PATH depends on TF_NEED_CUDA
-    value: "/usr/local/cuda"
+    value: '/usr/local/cuda'
     required: true
   - name: GCC_HOST_COMPILER_PATH
     description: GCC_HOST_COMPILER_PATH depends on TF_NEED_CUDA
-    value: "/usr/bin/gcc"
+    value: '/usr/bin/gcc'
     required: true
   - name: TF_NEED_OPENCL_SYCL
     description: TF_NEED_OPENCL_SYCL
@@ -252,15 +249,15 @@ parameters:
     required: true
   - name: NCCL_INSTALL_PATH
     description: "/usr/local/nccl-2.2"
-    value: "/usr/local/nccl-2.2"
+    value: '/usr/local/nccl-2.2'
     required: true
   - name: TEST_WHEEL_FILE
     description: "(y or n)To run a simple test code to test wheel file."
-    value: y
+    value: 'y'
     required: true
   - name: TF_GIT_BRANCH
     description: TF_GIT_BRANCH
-    value: r1.9
+    value: 'r1.9'
     required: true
   - name: SESHETA_GITHUB_ACCESS_TOKEN
     description: SESHETA_GITHUB_ACCESS_TOKEN value is required if you release to github
@@ -268,7 +265,7 @@ parameters:
     required: true
   - name: GIT_RELEASE_REPO
     description: GIT_RELEASE_REPO
-    value: https://github.com/AICoE/tensorflow-wheels.git
+    value: 'https://github.com/AICoE/tensorflow-wheels.git'
     required: true
   - name : BUILD_MAP
     description: Map of all the builds that are required to be deployed
