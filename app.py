@@ -4,6 +4,7 @@ Tensorflow wheel files builds and jobs trigger script
 
 # Packages
 import os
+import time
 import requests
 
 
@@ -82,7 +83,7 @@ class Tensorflow_Build_Trigger:
     def imagestream_template(self):
         imagestream = {
             "kind": "ImageStream",
-            "apiVersion": "v1",
+            "apiVersion": "image.openshift.io/v1",
             "metadata": {
                 "name": self.APPLICATION_BUILD_NAME,
                 "labels": {
@@ -103,10 +104,10 @@ class Tensorflow_Build_Trigger:
                                                                                                  self.namespace)
         imagestream_response = requests.post(imagestream_endpoint, json=imagestream, headers=self.headers, verify=False)
         print(imagestream_response.status_code)
-        if imagestream_response.status_code == 200:
+        if imagestream_response.status_code == 201:
             return True
         else:
-            print(imagestream_get_response.text)
+            print(imagestream_response.text)
             return False
 
     def get_buildconfig(self):
@@ -124,7 +125,7 @@ class Tensorflow_Build_Trigger:
     def builconfig_template(self):
         buildconfig = {
             "kind": "BuildConfig",
-            "apiVersion": "v1",
+            "apiVersion": "build.openshift.io/v1",
             "metadata": {
                 "name": self.APPLICATION_BUILD_NAME,
                 "labels": {
@@ -200,7 +201,7 @@ class Tensorflow_Build_Trigger:
                                                                                                  self.namespace)
         buildconfig_response = requests.post(buildconfig_endpoint, json=buildconfig, headers=self.headers, verify=False)
         print(buildconfig_response.status_code)
-        if buildconfig_response.status_code == 200:
+        if buildconfig_response.status_code == 201:
             return True
         else:
             print(buildconfig_response.text)
@@ -224,6 +225,7 @@ class Tensorflow_Build_Trigger:
         latest_build_response = requests.get(latest_build_endpoint, headers=self.headers, verify=False)
         print(latest_build_response.status_code)
         if 'status' in latest_build_response.json():
+            print("latest_build_response:",latest_build_response.json().get('status'))
             latest_build_status = latest_build_response.json().get('status')
             if isinstance(latest_build_status,dict):
                 return latest_build_status.get('lastVersion')
@@ -239,6 +241,7 @@ class Tensorflow_Build_Trigger:
         build_status_response = requests.get(build_status_endpoint, headers=self.headers, verify=False)
         print(build_status_response.status_code)
         if 'status' in build_status_response.json():
+            print("build_status_response:",build_status_response.json().get('status'))
             build_status = build_status_response.json().get('status')
             if isinstance(build_status,dict):
                 print(build_status.get('phase'))
@@ -438,7 +441,7 @@ class Tensorflow_Build_Trigger:
         job_endpoint = '{}/apis/batch/v1/namespaces/{}/jobs'.format(self.url, self.namespace)
         job_response = requests.post(job_endpoint, json=job, headers=self.headers, verify=False)
         print(job_response.status_code)
-        if job_response.status_code == 200:
+        if job_response.status_code == 201:
             return True
         else:
             print(job_response.text)
@@ -464,15 +467,22 @@ class Tensorflow_Build_Trigger:
         else:
             self.trigger_build()
         latest_build_id = self.get_latest_build()
-        status = self.get_status_build(self.APPLICATION_BUILD_NAME + '-' + latest_build_id)
-        while status != 'completed':
-            status = self.get_status_build(self.APPLICATION_BUILD_NAME + '-' + latest_build_id)
-        if not self.get_job():
-            job = self.job_template()
-            self.create_job(job)
+        status = self.get_status_build(self.APPLICATION_BUILD_NAME + '-' + str(latest_build_id))
+        while status == 'Running' or status == 'Pending':
+            time.sleep(60)
+            status = self.get_status_build(self.APPLICATION_BUILD_NAME + '-' + str(latest_build_id))
+        if status == 'completed':
+            if not self.get_job():
+                job = self.job_template()
+                self.create_job(job)
+            else:
+                job = self.job_template()
+                self.update_job(job)
+
         else:
-            job = self.job_template()
-            self.update_job(job)
+            # raise please check the log
+            print('please check the log')
+            pass
 
 
 if __name__ == '__main__':
