@@ -471,7 +471,7 @@ class Tensorflow_Build_Trigger:
         while status == 'Running' or status == 'Pending':
             time.sleep(60)
             status = self.get_status_build(self.APPLICATION_BUILD_NAME + '-' + str(latest_build_id))
-        if status == 'completed':
+        if status == 'Complete':
             if not self.get_job():
                 job = self.job_template()
                 self.create_job(job)
