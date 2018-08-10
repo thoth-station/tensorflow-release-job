@@ -5,10 +5,11 @@ Tensorflow wheel files builds and jobs trigger script
 # Packages
 import os
 import time
+import json
 import requests
 
 
-class Tensorflow_Build_Trigger:
+class TensorflowBuildTrigger:
     def __init__(self):
         self.namespace = os.getenv('OCP_NAMESPACE', '')  # set default inplace default quotes
         self.url = os.getenv('OCP_URL', '')  # set default inplace default quotes
@@ -19,20 +20,22 @@ class Tensorflow_Build_Trigger:
             'Accept': 'application/json',
             'Connection': 'close'
         }
+        self.BUILD_MAP = os.getenv('BUILD_MAP', "{}")
+
         # Buildconfig and Imagestream variables
-        self.APPLICATION_BUILD_NAME = os.getenv('APPLICATION_NAME', 'tf-fedora28-build-image-36')
+        # self.application_build_name = os.getenv('application_name', 'tf-fedora28-build-image-36')
         self.GENERIC_WEBHOOK_SECRET = os.getenv('GENERIC_WEBHOOK_SECRET', 'tf-build-secret')
         self.SOURCE_REPOSITORY = os.getenv('SOURCE_REPOSITORY',
                                            'https://github.com/thoth-station/tensorflow-build-s2i.git')
-        self.DOCKER_FILE_PATH = os.getenv('DOCKER_FILE_PATH', 'Dockerfile.fedora28')
-        self.S2I_IMAGE = os.getenv('S2I_IMAGE', 'registry.fedoraproject.org/f28/s2i-core')
-        self.NB_PYTHON_VER = os.getenv('NB_PYTHON_VER', '3.6')
+        # self.docker_file_path = os.getenv('docker_file_path', 'Dockerfile.fedora28')
+        # self.s2i_image = os.getenv('s2i_image', 'registry.fedoraproject.org/f28/s2i-core')
+        # self.nb_python_ver = os.getenv('nb_python_ver', '3.6')
         self.BAZEL_VERSION = os.getenv('BAZEL_VERSION', '0.11.0')
         self.VERSION = os.getenv('VERSION', '1')
 
         # job variables
-        self.APPLICATION_NAME = os.getenv('APPLICATION_NAME', 'tf-fedora28-build-job-36')
-        self.BUILDER_IMAGESTREAM = os.getenv('BUILDER_IMAGESTREAM', 'tf-fedora28-build-image-36:1')
+        # self.application_name = os.getenv('application_name', 'tf-fedora28-build-job-36')
+        # self.builder_imagesream = os.getenv('builder_imagesream', 'tf-fedora28-build-image-36:1')
         self.CUSTOM_BUILD = os.getenv('CUSTOM_BUILD', "bazel build --copt=-mavx --copt=-mavx2 --copt=-mfma "
                                                       "--copt=-mfpmath=both --copt=-msse4.2  "
                                                       "--cxxopt='-D_GLIBCXX_USE_CXX11_ABI=0' --local_resources 2048,"
@@ -68,10 +71,10 @@ class Tensorflow_Build_Trigger:
         self.SESHETA_GITHUB_ACCESS_TOKEN = os.getenv('SESHETA_GITHUB_ACCESS_TOKEN', "")
         self.GIT_RELEASE_REPO = os.getenv('GIT_RELEASE_REPO', "https://github.com/AICoE/tensorflow-wheels.git")
 
-    def get_imagestream(self):
+    def get_imagestream(self, application_build_name):
         imagestream_get_endpoint = '{}/apis/image.openshift.io/v1/namespaces/{}/imagestreams/{}'.format(self.url,
                                                                                                         self.namespace,
-                                                                                                        self.APPLICATION_BUILD_NAME)
+                                                                                                        application_build_name)
         imagestream_get_response = requests.get(imagestream_get_endpoint, headers=self.headers, verify=False)
         print(imagestream_get_response.status_code)
         if imagestream_get_response.status_code == 200:
@@ -80,15 +83,15 @@ class Tensorflow_Build_Trigger:
             print(imagestream_get_response.text)
             return False
 
-    def imagestream_template(self):
+    def imagestream_template(self, application_build_name):
         imagestream = {
             "kind": "ImageStream",
             "apiVersion": "image.openshift.io/v1",
             "metadata": {
-                "name": self.APPLICATION_BUILD_NAME,
+                "name": application_build_name,
                 "labels": {
                     "appTypes": "tensorflow-build-image",
-                    "appName": self.APPLICATION_BUILD_NAME
+                    "appName": application_build_name
                 }
             },
             "spec": {
@@ -110,10 +113,10 @@ class Tensorflow_Build_Trigger:
             print(imagestream_response.text)
             return False
 
-    def get_buildconfig(self):
+    def get_buildconfig(self, application_build_name):
         buildconfig_get_endpoint = '{}/apis/build.openshift.io/v1/namespaces/{}/buildconfigs/{}'.format(self.url,
                                                                                                         self.namespace,
-                                                                                                        self.APPLICATION_BUILD_NAME)
+                                                                                                        application_build_name)
         buildconfig_get_response = requests.get(buildconfig_get_endpoint, headers=self.headers, verify=False)
         print(buildconfig_get_response.status_code)
         if buildconfig_get_response.status_code == 200:
@@ -122,15 +125,15 @@ class Tensorflow_Build_Trigger:
             print(buildconfig_get_response.text)
             return False
 
-    def builconfig_template(self):
+    def builconfig_template(self, application_build_name, docker_file_path, s2i_image, nb_python_ver):
         buildconfig = {
             "kind": "BuildConfig",
             "apiVersion": "build.openshift.io/v1",
             "metadata": {
-                "name": self.APPLICATION_BUILD_NAME,
+                "name": application_build_name,
                 "labels": {
                     "appTypes": "tensorflow-build-image",
-                    "appName": self.APPLICATION_BUILD_NAME
+                    "appName": application_build_name
                 }
             },
             "spec": {
@@ -159,15 +162,15 @@ class Tensorflow_Build_Trigger:
                     "type": "Docker",
                     "dockerStrategy": {
                         "noCache": True,
-                        "dockerfilePath": self.DOCKER_FILE_PATH,
+                        "dockerfilePath": docker_file_path,
                         "from": {
                             "kind": "DockerImage",
-                            "name": self.S2I_IMAGE
+                            "name": s2i_image
                         },
                         "env": [
                             {
-                                "name": "NB_PYTHON_VER",
-                                "value": self.NB_PYTHON_VER
+                                "name": "nb_python_ver",
+                                "value": nb_python_ver
                             },
                             {
                                 "name": "BAZEL_VERSION",
@@ -179,7 +182,7 @@ class Tensorflow_Build_Trigger:
                 "output": {
                     "to": {
                         "kind": "ImageStreamTag",
-                        "name": self.APPLICATION_BUILD_NAME + ":" + self.VERSION
+                        "name": application_build_name + ":" + self.VERSION
                     }
                 },
                 "resources": {
@@ -207,9 +210,11 @@ class Tensorflow_Build_Trigger:
             print(buildconfig_response.text)
             return False
 
-    def trigger_build(self):
-        build_trigger_api = 'https://paas.upshift.redhat.com/oapi/v1/namespaces/aicoe/buildconfigs/tf-fedora27-build' \
-                            '-image-27/webhooks/tf-build-secret/generic '
+    def trigger_build(self, application_build_name):
+        build_trigger_api = '{}/oapi/v1/namespaces/{}/buildconfigs/{}/webhooks/{}/generic'.format(self.url,
+                                                                                                  self.namespace,
+                                                                                                  application_build_name,
+                                                                                                  self.GENERIC_WEBHOOK_SECRET)
         build_trigger_response = requests.get(build_trigger_api, headers=self.headers, verify=False)
         print(build_trigger_response.status_code)
         if build_trigger_response.status_code == 200:
@@ -218,16 +223,16 @@ class Tensorflow_Build_Trigger:
             print(build_trigger_response.text)
             return False
 
-    def get_latest_build(self):
+    def get_latest_build(self, application_build_name):
         latest_build_endpoint = '{}/apis/build.openshift.io/v1/namespaces/{}/buildconfigs/{}'.format(self.url,
                                                                                                      self.namespace,
-                                                                                                     self.APPLICATION_BUILD_NAME)
+                                                                                                     application_build_name)
         latest_build_response = requests.get(latest_build_endpoint, headers=self.headers, verify=False)
         print(latest_build_response.status_code)
         if 'status' in latest_build_response.json():
-            print("latest_build_response:",latest_build_response.json().get('status'))
+            print("latest_build_response:", latest_build_response.json().get('status'))
             latest_build_status = latest_build_response.json().get('status')
-            if isinstance(latest_build_status,dict):
+            if isinstance(latest_build_status, dict):
                 return latest_build_status.get('lastVersion')
         else:
             print(latest_build_response.text)
@@ -241,9 +246,9 @@ class Tensorflow_Build_Trigger:
         build_status_response = requests.get(build_status_endpoint, headers=self.headers, verify=False)
         print(build_status_response.status_code)
         if 'status' in build_status_response.json():
-            print("build_status_response:",build_status_response.json().get('status'))
+            print("build_status_response:", build_status_response.json().get('status'))
             build_status = build_status_response.json().get('status')
-            if isinstance(build_status,dict):
+            if isinstance(build_status, dict):
                 print(build_status.get('phase'))
                 return build_status.get('phase')
         else:
@@ -251,9 +256,9 @@ class Tensorflow_Build_Trigger:
             # raise
         return ""
 
-    def get_job(self):
+    def get_job(self, application_name):
         job_get_endpoint = '{}/apis/batch/v1/namespaces/{}/jobs/{}'.format(self.url, self.namespace,
-                                                                           self.APPLICATION_NAME)
+                                                                           application_name)
         job_get_response = requests.get(job_get_endpoint, headers=self.headers, verify=False)
         print(job_get_response.status_code)
         if job_get_response.status_code == 200:
@@ -262,15 +267,15 @@ class Tensorflow_Build_Trigger:
             print(job_get_response.text)
             return False
 
-    def job_template(self):
+    def job_template(self, application_name, builder_imagesream, nb_python_ver):
         job = {
             "kind": "Job",
             "apiVersion": "batch/v1",
             "metadata": {
-                "name": self.APPLICATION_NAME,
+                "name": application_name,
                 "labels": {
                     "appTypes": "tensorflow-build-job",
-                    "appName": self.APPLICATION_NAME
+                    "appName": application_name
                 }
             },
             "spec": {
@@ -278,8 +283,8 @@ class Tensorflow_Build_Trigger:
                     "metadata": {
                         "labels": {
                             "appTypes": "tensorflow-build-job",
-                            "deploymentconfig": self.APPLICATION_NAME,
-                            "appName": self.APPLICATION_NAME
+                            "deploymentconfig": application_name,
+                            "appName": application_name
                         }
                     },
                     "spec": {
@@ -391,8 +396,8 @@ class Tensorflow_Build_Trigger:
                                         "value": self.NCCL_INSTALL_PATH
                                     },
                                     {
-                                        "name": "NB_PYTHON_VER",
-                                        "value": self.NB_PYTHON_VER
+                                        "name": "nb_python_ver",
+                                        "value": nb_python_ver
                                     },
                                     {
                                         "name": "BAZEL_VERSION",
@@ -415,8 +420,8 @@ class Tensorflow_Build_Trigger:
                                         "value": self.SESHETA_GITHUB_ACCESS_TOKEN
                                     }
                                 ],
-                                "name": self.APPLICATION_NAME,
-                                "image": self.BUILDER_IMAGESTREAM,
+                                "name": application_name,
+                                "image": builder_imagesream,
                                 "command": ["/entrypoint", "/usr/libexec/s2i/run"],
                                 "resources": {
                                     "limits": {
@@ -447,8 +452,8 @@ class Tensorflow_Build_Trigger:
             print(job_response.text)
             return False
 
-    def update_job(self, job):
-        job_endpoint = '{}/apis/batch/v1/namespaces/{}/jobs/{}'.format(self.url, self.namespace, self.APPLICATION_NAME)
+    def update_job(self, job, application_name):
+        job_endpoint = '{}/apis/batch/v1/namespaces/{}/jobs/{}'.format(self.url, self.namespace, application_name)
         job_response = requests.post(job_endpoint, json=job, headers=self.headers, verify=False)
         print(job_response.status_code)
         if job_response.status_code == 200:
@@ -458,33 +463,49 @@ class Tensorflow_Build_Trigger:
             return False
 
     def main(self):
-        if not self.get_imagestream():
-            imagestream = self.imagestream_template()
-            self.create_imagestream(imagestream)
-        if not self.get_buildconfig():
-            buildconfig = self.builconfig_template()
-            self.create_buildconfig(buildconfig)
-        else:
-            self.trigger_build()
-        latest_build_id = self.get_latest_build()
-        status = self.get_status_build(self.APPLICATION_BUILD_NAME + '-' + str(latest_build_id))
-        while status == 'Running' or status == 'Pending':
-            time.sleep(60)
-            status = self.get_status_build(self.APPLICATION_BUILD_NAME + '-' + str(latest_build_id))
-        if status == 'Complete':
-            if not self.get_job():
-                job = self.job_template()
-                self.create_job(job)
-            else:
-                job = self.job_template()
-                self.update_job(job)
+        print("BUILD_MAP:", self.BUILD_MAP, type(self.BUILD_MAP))
+        if self.BUILD_MAP:
+            for py_version, os_detail in self.BUILD_MAP.items():
+                for os_version, os_registry in os_detail.items():
+                    application_build_name = "tf-{}-build-image-{}".format(os_version.lower(),
+                                                                           py_version.replace('.', ''))
+                    application_name = 'tf-{}-build-job-{}'.format(os_version.lower(), py_version.replace('.', ''))
+                    s2i_image = os_registry
+                    builder_imagesream = '{}:{}'.format(application_build_name, self.VERSION)
+                    nb_python_ver = py_version
+                    docker_file_path = 'Dockerfile.{}'.format(os_version.lower())
 
+                    if not self.get_imagestream(application_build_name):
+                        imagestream = self.imagestream_template(application_build_name)
+                        self.create_imagestream(imagestream)
+                    if not self.get_buildconfig(application_build_name):
+                        buildconfig = self.builconfig_template(application_build_name, s2i_image, docker_file_path,
+                                                               nb_python_ver)
+                        self.create_buildconfig(buildconfig)
+                    else:
+                        self.trigger_build(application_build_name)
+                    latest_build_id = self.get_latest_build(application_build_name)
+                    status = self.get_status_build(application_build_name + '-' + str(latest_build_id))
+                    while status == 'Running' or status == 'Pending':
+                        time.sleep(60)
+                        status = self.get_status_build(application_build_name + '-' + str(latest_build_id))
+                    if status == 'Complete':
+                        if not self.get_job(application_name):
+                            job = self.job_template(application_name, builder_imagesream, nb_python_ver)
+                            self.create_job(job)
+                        else:
+                            job = self.job_template(application_name, builder_imagesream, nb_python_ver)
+                            self.update_job(job, application_name)
+
+                    else:
+                        # raise please check the log
+                        print('please check the log')
+                        pass
         else:
-            # raise please check the log
-            print('please check the log')
+            # raise
             pass
 
 
 if __name__ == '__main__':
-    tensorflow_build_trigger = Tensorflow_Build_Trigger()
+    tensorflow_build_trigger = TensorflowBuildTrigger()
     tensorflow_build_trigger.main()
