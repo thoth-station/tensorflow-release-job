@@ -76,6 +76,7 @@ class Tensorflow_Build_Trigger:
         if imagestream_get_response.status_code == 200:
             return True
         else:
+            print(imagestream_get_response.text)
             return False
 
     def imagestream_template(self):
@@ -105,6 +106,7 @@ class Tensorflow_Build_Trigger:
         if imagestream_response.status_code == 200:
             return True
         else:
+            print(imagestream_get_response.text)
             return False
 
     def get_buildconfig(self):
@@ -116,6 +118,7 @@ class Tensorflow_Build_Trigger:
         if buildconfig_get_response.status_code == 200:
             return True
         else:
+            print(buildconfig_get_response.text)
             return False
 
     def builconfig_template(self):
@@ -197,6 +200,11 @@ class Tensorflow_Build_Trigger:
                                                                                                  self.namespace)
         buildconfig_response = requests.post(buildconfig_endpoint, json=buildconfig, headers=self.headers, verify=False)
         print(buildconfig_response.status_code)
+        if buildconfig_response.status_code == 200:
+            return True
+        else:
+            print(buildconfig_response.text)
+            return False
 
     def trigger_build(self):
         build_trigger_api = 'https://paas.upshift.redhat.com/oapi/v1/namespaces/aicoe/buildconfigs/tf-fedora27-build' \
@@ -206,6 +214,7 @@ class Tensorflow_Build_Trigger:
         if build_trigger_response.status_code == 200:
             return True
         else:
+            print(build_trigger_response.text)
             return False
 
     def get_latest_build(self):
@@ -216,10 +225,12 @@ class Tensorflow_Build_Trigger:
         print(latest_build_response.status_code)
         if 'status' in latest_build_response.json():
             latest_build_status = latest_build_response.json().get('status')
-            return latest_build_status.get('lastVersion')
+            if isinstance(latest_build_status,dict):
+                return latest_build_status.get('lastVersion')
         else:
+            print(latest_build_response.text)
             # raise
-            return ""
+        return ""
 
     def get_status_build(self, build_name):
         build_status_endpoint = '{}/apis/build.openshift.io/v1/namespaces/{}/builds/{}'.format(self.url,
@@ -229,11 +240,13 @@ class Tensorflow_Build_Trigger:
         print(build_status_response.status_code)
         if 'status' in build_status_response.json():
             build_status = build_status_response.json().get('status')
-            print(build_status.get('phase'))
-            return build_status.get('phase')
+            if isinstance(build_status,dict):
+                print(build_status.get('phase'))
+                return build_status.get('phase')
         else:
+            print(build_status_response.text)
             # raise
-            return ""
+        return ""
 
     def get_job(self):
         job_get_endpoint = '{}/apis/batch/v1/namespaces/{}/jobs/{}'.format(self.url, self.namespace,
@@ -243,6 +256,7 @@ class Tensorflow_Build_Trigger:
         if job_get_response.status_code == 200:
             return True
         else:
+            print(job_get_response.text)
             return False
 
     def job_template(self):
@@ -427,6 +441,7 @@ class Tensorflow_Build_Trigger:
         if job_response.status_code == 200:
             return True
         else:
+            print(job_response.text)
             return False
 
     def update_job(self, job):
@@ -436,6 +451,7 @@ class Tensorflow_Build_Trigger:
         if job_response.status_code == 200:
             return True
         else:
+            print(job_response.text)
             return False
 
     def main(self):
