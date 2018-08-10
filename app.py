@@ -91,7 +91,7 @@ class Tensorflow_Build_Trigger:
             },
             "spec": {
                 "lookupPolicy": {
-                    "local": true
+                    "local": True
                 }
             }
         }
@@ -154,7 +154,7 @@ class Tensorflow_Build_Trigger:
                 "strategy": {
                     "type": "Docker",
                     "dockerStrategy": {
-                        "noCache": true,
+                        "noCache": True,
                         "dockerfilePath": self.DOCKER_FILE_PATH,
                         "from": {
                             "kind": "DockerImage",
@@ -229,6 +229,7 @@ class Tensorflow_Build_Trigger:
         print(build_status_response.status_code)
         if 'status' in build_status_response.json():
             build_status = build_status_response.json().get('status')
+            print(build_status.get('phase'))
             return build_status.get('phase')
         else:
             # raise
