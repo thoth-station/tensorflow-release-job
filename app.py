@@ -1,13 +1,13 @@
 """
-Tensorflow wheel files builds and jobs trigger script 
+Tensorflow wheel files builds and jobs trigger application.
 """
 
 # Packages
 import os
 import time
 import json
+import urllib3
 import requests
-
 
 class TensorflowBuildTrigger:
     def __init__(self):
@@ -76,11 +76,11 @@ class TensorflowBuildTrigger:
                                                                                                         self.namespace,
                                                                                                         application_build_name)
         imagestream_get_response = requests.get(imagestream_get_endpoint, headers=self.headers, verify=False)
-        print(imagestream_get_response.status_code)
+        print("status code for imagestream GET request: ", imagestream_get_response.status_code)
         if imagestream_get_response.status_code == 200:
             return True
         else:
-            print(imagestream_get_response.text)
+            print("error for imagestream GET request: ", imagestream_get_response.text)
             return False
 
     def imagestream_template(self, application_build_name):
@@ -106,11 +106,11 @@ class TensorflowBuildTrigger:
         imagestream_endpoint = '{}/apis/image.openshift.io/v1/namespaces/{}/imagestreams'.format(self.url,
                                                                                                  self.namespace)
         imagestream_response = requests.post(imagestream_endpoint, json=imagestream, headers=self.headers, verify=False)
-        print(imagestream_response.status_code)
+        print("status code for imagestream POST request: ", imagestream_response.status_code)
         if imagestream_response.status_code == 201:
             return True
         else:
-            print(imagestream_response.text)
+            print("error for imagestream POST request: ", imagestream_response.text)
             return False
 
     def get_buildconfig(self, application_build_name):
@@ -118,11 +118,11 @@ class TensorflowBuildTrigger:
                                                                                                         self.namespace,
                                                                                                         application_build_name)
         buildconfig_get_response = requests.get(buildconfig_get_endpoint, headers=self.headers, verify=False)
-        print(buildconfig_get_response.status_code)
+        print("status code for BuildConfig GET request: ", buildconfig_get_response.status_code)
         if buildconfig_get_response.status_code == 200:
             return True
         else:
-            print(buildconfig_get_response.text)
+            print("error for Buildconfig GET request: ", buildconfig_get_response.text)
             return False
 
     def builconfig_template(self, application_build_name, docker_file_path, s2i_image, nb_python_ver):
@@ -203,11 +203,11 @@ class TensorflowBuildTrigger:
         buildconfig_endpoint = '{}/apis/build.openshift.io/v1/namespaces/{}/buildconfigs'.format(self.url,
                                                                                                  self.namespace)
         buildconfig_response = requests.post(buildconfig_endpoint, json=buildconfig, headers=self.headers, verify=False)
-        print(buildconfig_response.status_code)
+        print("status code for Buildconfig POST request: ", buildconfig_response.status_code)
         if buildconfig_response.status_code == 201:
             return True
         else:
-            print(buildconfig_response.text)
+            print("error for Buildconfig POST request: ", buildconfig_response.text)
             return False
 
     def trigger_build(self, application_build_name):
@@ -216,11 +216,11 @@ class TensorflowBuildTrigger:
                                                                                                   application_build_name,
                                                                                                   self.GENERIC_WEBHOOK_SECRET)
         build_trigger_response = requests.get(build_trigger_api, headers=self.headers, verify=False)
-        print(build_trigger_response.status_code)
+        print("status code for Build Webhook Trigger request: ", build_trigger_response.status_code)
         if build_trigger_response.status_code == 200:
             return True
         else:
-            print(build_trigger_response.text)
+            print("error for Build Webhook Trigger request: ", build_trigger_response.text)
             return False
 
     def get_latest_build(self, application_build_name):
@@ -228,43 +228,42 @@ class TensorflowBuildTrigger:
                                                                                                      self.namespace,
                                                                                                      application_build_name)
         latest_build_response = requests.get(latest_build_endpoint, headers=self.headers, verify=False)
-        print(latest_build_response.status_code)
+        print("status code for latest Buildconfig GET request: ", latest_build_response.status_code)
         if 'status' in latest_build_response.json():
-            print("latest_build_response:", latest_build_response.json().get('status'))
             latest_build_status = latest_build_response.json().get('status')
             if isinstance(latest_build_status, dict):
                 return latest_build_status.get('lastVersion')
+            else:
+                raise Exception('error in fetching the lastVersion from the latest Buildconfig status: {}'.format(
+                    latest_build_response.json().get('status')))
         else:
-            print(latest_build_response.text)
-            # raise
-        return ""
+            raise Exception('error in latest Buildconfig GET response: {}'.format(latest_build_response.text))
 
     def get_status_build(self, build_name):
         build_status_endpoint = '{}/apis/build.openshift.io/v1/namespaces/{}/builds/{}'.format(self.url,
                                                                                                self.namespace,
                                                                                                build_name)
         build_status_response = requests.get(build_status_endpoint, headers=self.headers, verify=False)
-        print(build_status_response.status_code)
+        print("status code for latest Build's GET request: ", build_status_response.status_code)
         if 'status' in build_status_response.json():
-            print("build_status_response:", build_status_response.json().get('status'))
             build_status = build_status_response.json().get('status')
             if isinstance(build_status, dict):
-                print(build_status.get('phase'))
                 return build_status.get('phase')
+            else:
+                raise Exception('error in fetching the status of the latest Build: {}'.format(
+                    build_status_response.json().get('status')))
         else:
-            print(build_status_response.text)
-            # raise
-        return ""
+            raise Exception('error in latest Builds GET response: {}'.format(build_status_response.text))
 
     def get_job(self, application_name):
         job_get_endpoint = '{}/apis/batch/v1/namespaces/{}/jobs/{}'.format(self.url, self.namespace,
                                                                            application_name)
         job_get_response = requests.get(job_get_endpoint, headers=self.headers, verify=False)
-        print(job_get_response.status_code)
+        print("status code for job GET request: ", job_get_response.status_code)
         if job_get_response.status_code == 200:
             return True
         else:
-            print(job_get_response.text)
+            print("error for job GET request: ", job_get_response.text)
             return False
 
     def job_template(self, application_name, builder_imagesream, nb_python_ver):
@@ -445,21 +444,21 @@ class TensorflowBuildTrigger:
     def create_job(self, job):
         job_endpoint = '{}/apis/batch/v1/namespaces/{}/jobs'.format(self.url, self.namespace)
         job_response = requests.post(job_endpoint, json=job, headers=self.headers, verify=False)
-        print(job_response.status_code)
+        print("status code for job POST request: ", job_response.status_code)
         if job_response.status_code == 201:
             return True
         else:
-            print(job_response.text)
+            print("error for job POST request: ", job_response.text)
             return False
 
     def update_job(self, job, application_name):
         job_endpoint = '{}/apis/batch/v1/namespaces/{}/jobs/{}'.format(self.url, self.namespace, application_name)
         job_response = requests.post(job_endpoint, json=job, headers=self.headers, verify=False)
-        print(job_response.status_code)
+        print("status code for job PUT request: ", job_response.status_code)
         if job_response.status_code == 200:
             return True
         else:
-            print(job_response.text)
+            print("error for job PUT request: ", job_response.text)
             return False
 
     def main(self):
@@ -473,7 +472,14 @@ class TensorflowBuildTrigger:
                     builder_imagesream = '{}:{}'.format(application_build_name, self.VERSION)
                     nb_python_ver = py_version
                     docker_file_path = 'Dockerfile.{}'.format(os_version.lower())
-
+                    print("-------------------VARIABLES-------------------------")
+                    print("APPLICATION_BUILD_NAME: ", application_build_name)
+                    print("APPLICATION_NAME: ", application_name)
+                    print("S2I_IMAGE: ", s2i_image)
+                    print("BUILDER_IMAGESTREAM: ", builder_imagesream)
+                    print("PYTHON VERSION: ", nb_python_ver)
+                    print("DOCKERFILE: ", docker_file_path)
+                    print("-----------------------------------------------------")
                     if not self.get_imagestream(application_build_name):
                         imagestream = self.imagestream_template(application_build_name)
                         self.create_imagestream(imagestream)
@@ -486,7 +492,7 @@ class TensorflowBuildTrigger:
                     latest_build_id = self.get_latest_build(application_build_name)
                     status = self.get_status_build(application_build_name + '-' + str(latest_build_id))
                     while status == 'Running' or status == 'Pending':
-                        time.sleep(60)
+                        time.sleep(90)
                         status = self.get_status_build(application_build_name + '-' + str(latest_build_id))
                     if status == 'Complete':
                         if not self.get_job(application_name):
@@ -497,14 +503,12 @@ class TensorflowBuildTrigger:
                             self.update_job(job, application_name)
 
                     else:
-                        # raise please check the log
-                        print('please check the log')
-                        pass
+                        raise Exception("Build didn't complete successfully, Please check openshift events")
         else:
-            # raise
-            pass
+            raise Exception("Issue in BUILD_MAP!!!")
 
 
 if __name__ == '__main__':
+    urllib3.disable_warnings()
     tensorflow_build_trigger = TensorflowBuildTrigger()
     tensorflow_build_trigger.main()
