@@ -32,7 +32,7 @@ class TensorflowBuildTrigger:
         # self.s2i_image = os.getenv('s2i_image', 'registry.fedoraproject.org/f28/s2i-core')
         # self.nb_python_ver = os.getenv('nb_python_ver', '3.6')
         self.BAZEL_VERSION = os.getenv('BAZEL_VERSION', '0.11.0')
-        self.VERSION = os.getenv('VERSION', '1')
+        self.VERSION = os.getenv('VERSION', 'latest')
 
         # job variables
         # self.application_name = os.getenv('application_name', 'tf-fedora28-build-job-36')

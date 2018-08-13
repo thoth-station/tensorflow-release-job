@@ -22,7 +22,9 @@ objects:
   metadata:
     name: tensorflow-trigger-job
     labels:
-      app: tensorflow-trigger
+      app: thoth
+      component: tensorflow-trigger
+
   spec:
     parallelism: 1    
     completions: 1    

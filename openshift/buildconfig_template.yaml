@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: tensorflow-trigger-buildconfig
+  annotations:
+    description: This is Thoth - tensorflow build
+    openshift.io/display-name: Thoth Core
+    version: 0.4.0
+    tags: poc,thoth,tensorflow-trigger,ai-stacks
+    template.openshift.io/documentation-url: https://github.com/Thoth-Station/
+    template.openshift.io/long-description: >
+      This template defines resources needed to deploy Buildconfig and Deploymentconfig for tensorflow-trigger-job to OpenShift.
+    template.openshift.io/provider-display-name: Red Hat, Inc.
+  labels:
+    template: tensorflow-trigger-buildconfig
+    app: thoth
+    component: tensorflow-trigger
+
+objects:
+  - kind: BuildConfig
+    apiVersion: v1
+    metadata:
+      name: tensorflow-trigger
+      labels:
+        app: thoth
+        component: tensorflow-trigger
+
+    spec:
+      resources:
+        limits:
+          cpu: 2
+          memory: 768Mi
+        requests:
+          cpu: 2
+          memory: 768Mi
+      output:
+        to:
+          kind: ImageStreamTag
+          name: 'tensorflow-trigger:${IMAGE_STREAM_TAG}'
+      source:
+        type: Git
+        git:
+          uri: '${GITHUB_URL}'
+          ref: '${GITHUB_REF}'
+      strategy:
+        type: Source
+        sourceStrategy:
+          from:
+            kind: ImageStreamTag
+            name: python-36-centos7:latest
+          env:
+            - name: ENABLE_PIPENV
+              value: '1'
+            - name: UPGRADE_PIP_TO_LATEST
+              value: ''
+      triggers:
+        - type: ConfigChange
+        - type: ImageChange
+          imageChange: {}
+      lookupPolicy:
+        local: true
+
+  - apiVersion: v1
+    kind: ImageStream
+    metadata:
+      labels:
+        app: thoth
+      name: tensorflow-trigger
+    spec:
+      name: latest
+      lookupPolicy:
+        local: true
+
+parameters:
+  - description: Name of the github repository for Thoth's Tensorflow Trigger Job
+    displayName: Git Repository
+    required: true
+    name: GITHUB_URL
+    value: 'https://github.com/thoth-station/tensorflow-trigger-job'
+
+  - description: Git reference to be used for Thoth's Tensorflow Trigger Job
+    displayName: Git Reference
+    required: true
+    name: GITHUB_REF
+    value: 'master'
+
+  - description: Tag of the output ImageStream the resulting container image should go to
+    displayName: ImageStream Tag
+    required: true
+    name: IMAGE_STREAM_TAG
+    value: 'latest'
+
