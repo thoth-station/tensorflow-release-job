@@ -24,19 +24,13 @@ class TensorflowBuildTrigger:
         self.BUILD_MAP = os.getenv('BUILD_MAP', "{}")
 
         # Buildconfig and Imagestream variables
-        # self.application_build_name = os.getenv('application_name', 'tf-fedora28-build-image-36')
         self.GENERIC_WEBHOOK_SECRET = os.getenv('GENERIC_WEBHOOK_SECRET', 'tf-build-secret')
         self.SOURCE_REPOSITORY = os.getenv('SOURCE_REPOSITORY',
                                            'https://github.com/thoth-station/tensorflow-build-s2i.git')
-        # self.docker_file_path = os.getenv('docker_file_path', 'Dockerfile.fedora28')
-        # self.s2i_image = os.getenv('s2i_image', 'registry.fedoraproject.org/f28/s2i-core')
-        # self.nb_python_ver = os.getenv('nb_python_ver', '3.6')
         self.BAZEL_VERSION = os.getenv('BAZEL_VERSION', '0.11.0')
         self.VERSION = os.getenv('VERSION', 'latest')
 
         # job variables
-        # self.application_name = os.getenv('application_name', 'tf-fedora28-build-job-36')
-        # self.builder_imagesream = os.getenv('builder_imagesream', 'tf-fedora28-build-image-36:1')
         self.CUSTOM_BUILD = os.getenv('CUSTOM_BUILD', "bazel build --copt=-mavx --copt=-mavx2 --copt=-mfma "
                                                       "--copt=-mfpmath=both --copt=-msse4.2  "
                                                       "--cxxopt='-D_GLIBCXX_USE_CXX11_ABI=0' --local_resources 2048,"
@@ -148,7 +142,8 @@ class TensorflowBuildTrigger:
                     {
                         "type": "Generic",
                         "generic": {
-                            "secret": self.GENERIC_WEBHOOK_SECRET
+                            "secret": self.GENERIC_WEBHOOK_SECRET,
+                            "allowEnv": True
                         }
                     }
                 ],
@@ -211,14 +206,31 @@ class TensorflowBuildTrigger:
             print("Error for Buildconfig POST request: ", buildconfig_response.text)
             return False
 
-    def trigger_build(self, application_build_name):
+    def trigger_build(self, application_build_name, nb_python_ver):
+        trigger_payload = {
+            "git": {
+                "uri": self.SOURCE_REPOSITORY,
+                "ref": "master"
+            },
+            "env": [
+                {
+                    "name": "NB_PYTHON_VER",
+                    "value": nb_python_ver
+                },
+                {
+                    "name": "BAZEL_VERSION",
+                    "value": self.BAZEL_VERSION
+                }
+            ]
+        }
         build_trigger_api = '{}/apis/build.openshift.io/v1/namespaces/{}/buildconfigs/{}/webhooks/{}/generic'.format(
             self.url,
             self.namespace,
             application_build_name,
             self.GENERIC_WEBHOOK_SECRET)
-        build_trigger_response = requests.get(build_trigger_api, headers=self.headers, verify=False)
+        build_trigger_response = requests.post(build_trigger_api, json=trigger_payload, headers=self.headers, verify=False)
         print("Status code for Build Webhook Trigger request: ", build_trigger_response.status_code)
+        print("checking payload: ", build_trigger_response.text)
         if build_trigger_response.status_code == 200:
             return True
         else:
@@ -540,7 +552,8 @@ class TensorflowBuildTrigger:
                             latest_build_id = self.get_latest_build(application_build_name=application_build_name)
                             status = self.get_status_build('{}-{}'.format(application_build_name, str(latest_build_id)))
                             if status.get('phase') != 'Running' or status.get('phase') != 'Pending':
-                                self.trigger_build(application_build_name=application_build_name)
+                                self.trigger_build(application_build_name=application_build_name,
+                                                   nb_python_ver=nb_python_ver)
 
                         latest_build_id = self.get_latest_build(application_build_name=application_build_name)
                         status = self.get_status_build('{}-{}'.format(application_build_name, str(latest_build_id)))
@@ -558,7 +571,8 @@ class TensorflowBuildTrigger:
                                 log_status = self.get_logs(build_pod=build_pod_name)
                                 if log_status and 'gpg: keyserver receive failed: Keyserver error' in open(
                                         build_pod_name).read():
-                                    trigger_status = self.trigger_build(application_build_name=application_build_name)
+                                    trigger_status = self.trigger_build(application_build_name=application_build_name,
+                                                                        nb_python_ver=nb_python_ver)
                                     if trigger_status:
                                         latest_build_id = self.get_latest_build(
                                             application_build_name=application_build_name)
