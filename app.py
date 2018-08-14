@@ -230,7 +230,6 @@ class TensorflowBuildTrigger:
             self.GENERIC_WEBHOOK_SECRET)
         build_trigger_response = requests.post(build_trigger_api, json=trigger_payload, headers=self.headers, verify=False)
         print("Status code for Build Webhook Trigger request: ", build_trigger_response.status_code)
-        print("checking payload: ", build_trigger_response.text)
         if build_trigger_response.status_code == 200:
             return True
         else:
@@ -286,7 +285,7 @@ class TensorflowBuildTrigger:
         print("Status code for build pod log GET request: ", build_pod_logs.status_code)
         if build_pod_logs.status_code == 200:
             with open('{}.txt'.format(build_pod), 'w') as f:
-                f.write(build_pod_logs.content)
+                f.write(build_pod_logs.text)
             return True
         else:
             print("Error for build pod log GET request: ", build_pod_logs.text)
@@ -528,6 +527,12 @@ class TensorflowBuildTrigger:
                         builder_imagesream = '{}:{}'.format(application_build_name, self.VERSION)
                         nb_python_ver = py_version
                         docker_file_path = 'Dockerfile.{}'.format(os_version.lower())
+                        if 'gpu' in os_version.lower():
+                            self.BAZEL_VERSION = '0.15.0'
+                            self.TF_NEED_CUDA = '1'
+                        else:
+                            self.BAZEL_VERSION = '0.11.0'
+                            self.TF_NEED_CUDA = '0'
                         print("-------------------VARIABLES-------------------------")
                         print("APPLICATION_BUILD_NAME: ", application_build_name)
                         print("APPLICATION_NAME: ", application_name)
@@ -535,6 +540,8 @@ class TensorflowBuildTrigger:
                         print("BUILDER_IMAGESTREAM: ", builder_imagesream)
                         print("PYTHON VERSION: ", nb_python_ver)
                         print("DOCKERFILE: ", docker_file_path)
+                        print("BAZEL_VERSION: ", self.BAZEL_VERSION)
+                        print("TF_NEED_CUDA: ", self.TF_NEED_CUDA)
                         print("-----------------------------------------------------")
                         if not self.get_imagestream(application_build_name=application_build_name):
                             imagestream = self.imagestream_template(application_build_name=application_build_name)
