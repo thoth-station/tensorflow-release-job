@@ -212,10 +212,11 @@ class TensorflowBuildTrigger:
             return False
 
     def trigger_build(self, application_build_name):
-        build_trigger_api = '{}/oapi/v1/namespaces/{}/buildconfigs/{}/webhooks/{}/generic'.format(self.url,
-                                                                                                  self.namespace,
-                                                                                                  application_build_name,
-                                                                                                  self.GENERIC_WEBHOOK_SECRET)
+        build_trigger_api = '{}/apis/build.openshift.io/v1/namespaces/{}/buildconfigs/{}/webhooks/{}/generic'.format(
+            self.url,
+            self.namespace,
+            application_build_name,
+            self.GENERIC_WEBHOOK_SECRET)
         build_trigger_response = requests.get(build_trigger_api, headers=self.headers, verify=False)
         print("Status code for Build Webhook Trigger request: ", build_trigger_response.status_code)
         if build_trigger_response.status_code == 200:
@@ -265,6 +266,18 @@ class TensorflowBuildTrigger:
             return True
         else:
             print("Error for job GET request: ", job_get_response.text)
+            return False
+
+    def get_logs(self, build_pod):
+        build_pod_endpoint = '{}/api/v1/namespaces/{}/pods/{}/log'.format(self.url, self.namespace, build_pod)
+        build_pod_logs = requests.get(build_pod_endpoint, headers=self.headers, verify=False)
+        print("Status code for build pod log GET request: ", build_pod_logs.status_code)
+        if build_pod_logs.status_code == 200:
+            with open('{}.txt'.format(build_pod), 'w') as f:
+                f.write(build_pod_logs.content)
+            return True
+        else:
+            print("Error for build pod log GET request: ", build_pod_logs.text)
             return False
 
     def job_template(self, application_name, builder_imagesream, nb_python_ver):
@@ -396,7 +409,7 @@ class TensorflowBuildTrigger:
                                         "value": self.NCCL_INSTALL_PATH
                                     },
                                     {
-                                        "name": "nb_python_ver",
+                                        "name": "NB_PYTHON_VER",
                                         "value": nb_python_ver
                                     },
                                     {
@@ -469,7 +482,7 @@ class TensorflowBuildTrigger:
         print("Status code for job GET status request: ", job_status_response.status_code)
         if job_status_response.status_code == 200:
             job_details = job_status_response.json().get('status')
-            print('Job Status: ',job_details)
+            print('Job Status: ', job_details)
             if job_details and 'active' in job_details:
                 return True
             else:
@@ -538,6 +551,36 @@ class TensorflowBuildTrigger:
                             time.sleep(90)
                             status = self.get_status_build('{}-{}'.format(application_build_name, str(latest_build_id)))
 
+                        if status.get('phase') == 'Failed':
+                            for tries in range(3):
+                                latest_build_id = self.get_latest_build(application_build_name=application_build_name)
+                                build_pod_name = '{}-{}-build'.format(application_build_name, latest_build_id)
+                                log_status = self.get_logs(build_pod=build_pod_name)
+                                if log_status and 'gpg: keyserver receive failed: Keyserver error' in open(
+                                        build_pod_name).read():
+                                    trigger_status = self.trigger_build(application_build_name=application_build_name)
+                                    if trigger_status:
+                                        latest_build_id = self.get_latest_build(
+                                            application_build_name=application_build_name)
+                                        status = self.get_status_build(
+                                            '{}-{}'.format(application_build_name, str(latest_build_id)))
+                                        while status.get('phase') in ['Running', 'Pending', 'New']:
+                                            if status.get('phase') == 'New' and status.get(
+                                                    'reason') == 'CannotCreateBuildPod':
+                                                print('Build failed due to', status.get('reason'))
+                                                break
+                                            time.sleep(90)
+                                            status = self.get_status_build(
+                                                '{}-{}'.format(application_build_name, str(latest_build_id)))
+                                        if status.get('phase') == 'Failed':
+                                            continue
+                                        else:
+                                            break
+                                    else:
+                                        raise Exception('Build can not be re triggered! check the error in log.')
+                                else:
+                                    raise Exception('Build Failed due to unknown reason! check the error in log.')
+
                         if status.get('phase') == 'Complete':
                             if not self.get_job(application_name=application_name):
                                 job = self.job_template(application_name=application_name,
@@ -548,7 +591,7 @@ class TensorflowBuildTrigger:
                                 if not self.get_job_status(application_name=application_name):
                                     job_deleted = self.delete_job(application_name=application_name)
                                     while self.get_job_status(application_name=application_name):
-                                        sleep(5)
+                                        time.sleep(5)
                                     if job_deleted:
                                         job = self.job_template(application_name=application_name,
                                                                 builder_imagesream=builder_imagesream,
