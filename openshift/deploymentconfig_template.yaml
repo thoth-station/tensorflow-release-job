@@ -130,6 +130,7 @@ objects:
                 requests:
                   cpu: 500m
                   memory: 512Mi
+      restartPolicy: Never
       triggers:
         - type: ConfigChange
         - type: ImageChange

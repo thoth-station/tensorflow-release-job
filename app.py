@@ -170,7 +170,7 @@ class TensorflowBuildTrigger:
                         },
                         "env": [
                             {
-                                "name": "nb_python_ver",
+                                "name": "NB_PYTHON_VER",
                                 "value": nb_python_ver
                             },
                             {
