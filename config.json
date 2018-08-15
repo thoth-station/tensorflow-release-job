@@ -1,32 +1,128 @@
 {
-    "2.7": {
-        "Fedora27": "registry.fedoraproject.org/f27/s2i-core",
-        "Fedora28": "registry.fedoraproject.org/f28/s2i-core",
-        "RHEL75": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
-        "Centos7": "openshift/base-centos7",
-        "Fedora27gpu": "registry.fedoraproject.org/f27/s2i-core",
-        "Fedora28gpu": "registry.fedoraproject.org/f28/s2i-core",
-        "RHEL75gpu": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
-        "Centos7gpu": "openshift/base-centos7"
+  "2.7": {
+    "Fedora27": {
+      "S2I_IMAGE": "registry.fedoraproject.org/f27/s2i-core",
+      "BAZEL_VERSION": "0.11.0",
+      "TF_NEED_CUDA": "0"
     },
-    "3.5": {
-        "Fedora27": "registry.fedoraproject.org/f27/s2i-core",
-        "Fedora28": "registry.fedoraproject.org/f28/s2i-core",
-        "RHEL75": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
-        "Centos7": "openshift/base-centos7",
-        "Fedora27gpu": "registry.fedoraproject.org/f27/s2i-core",
-        "Fedora28gpu": "registry.fedoraproject.org/f28/s2i-core",
-        "RHEL75gpu": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
-        "Centos7gpu": "openshift/base-centos7"
+    "Fedora28": {
+      "S2I_IMAGE": "registry.fedoraproject.org/f28/s2i-core",
+      "BAZEL_VERSION": "0.11.0",
+      "TF_NEED_CUDA": "0"
     },
-    "3.6": {
-        "Fedora27": "registry.fedoraproject.org/f27/s2i-core",
-        "Fedora28": "registry.fedoraproject.org/f28/s2i-core",
-        "RHEL75": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
-        "Centos7": "openshift/base-centos7",
-        "Fedora27gpu": "registry.fedoraproject.org/f27/s2i-core",
-        "Fedora28gpu": "registry.fedoraproject.org/f28/s2i-core",
-        "RHEL75gpu": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
-        "Centos7gpu": "openshift/base-centos7"
+    "RHEL75": {
+      "S2I_IMAGE": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
+      "BAZEL_VERSION": "0.11.0",
+      "TF_NEED_CUDA": "0"
+    },
+    "Centos7": {
+      "S2I_IMAGE": "openshift/base-centos7",
+      "BAZEL_VERSION": "0.11.0",
+      "TF_NEED_CUDA": "0"
+    },
+    "Fedora27gpu": {
+      "S2I_IMAGE": "registry.fedoraproject.org/f27/s2i-core",
+      "BAZEL_VERSION": "0.15.0",
+      "TF_NEED_CUDA": "1"
+    },
+    "Fedora28gpu": {
+      "S2I_IMAGE": "registry.fedoraproject.org/f28/s2i-core",
+      "BAZEL_VERSION": "0.15.0",
+      "TF_NEED_CUDA": "1"
+    },
+    "RHEL75gpu": {
+      "S2I_IMAGE": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
+      "BAZEL_VERSION": "0.15.0",
+      "TF_NEED_CUDA": "1"
+    },
+    "Centos7gpu": {
+      "S2I_IMAGE": "openshift/base-centos7",
+      "BAZEL_VERSION": "0.15.0",
+      "TF_NEED_CUDA": "1"
     }
+  },
+  "3.5": {
+    "Fedora27": {
+      "S2I_IMAGE": "registry.fedoraproject.org/f27/s2i-core",
+      "BAZEL_VERSION": "0.11.0",
+      "TF_NEED_CUDA": "0"
+    },
+    "Fedora28": {
+      "S2I_IMAGE": "registry.fedoraproject.org/f28/s2i-core",
+      "BAZEL_VERSION": "0.11.0",
+      "TF_NEED_CUDA": "0"
+    },
+    "RHEL75": {
+      "S2I_IMAGE": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
+      "BAZEL_VERSION": "0.11.0",
+      "TF_NEED_CUDA": "0"
+    },
+    "Centos7": {
+      "S2I_IMAGE": "openshift/base-centos7",
+      "BAZEL_VERSION": "0.11.0",
+      "TF_NEED_CUDA": "0"
+    },
+    "Fedora27gpu": {
+      "S2I_IMAGE": "registry.fedoraproject.org/f27/s2i-core",
+      "BAZEL_VERSION": "0.15.0",
+      "TF_NEED_CUDA": "1"
+    },
+    "Fedora28gpu": {
+      "S2I_IMAGE": "registry.fedoraproject.org/f28/s2i-core",
+      "BAZEL_VERSION": "0.15.0",
+      "TF_NEED_CUDA": "1"
+    },
+    "RHEL75gpu": {
+      "S2I_IMAGE": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
+      "BAZEL_VERSION": "0.15.0",
+      "TF_NEED_CUDA": "1"
+    },
+    "Centos7gpu": {
+      "S2I_IMAGE": "openshift/base-centos7",
+      "BAZEL_VERSION": "0.15.0",
+      "TF_NEED_CUDA": "1"
+    }
+  },
+  "3.6": {
+    "Fedora27": {
+      "S2I_IMAGE": "registry.fedoraproject.org/f27/s2i-core",
+      "BAZEL_VERSION": "0.11.0",
+      "TF_NEED_CUDA": "0"
+    },
+    "Fedora28": {
+      "S2I_IMAGE": "registry.fedoraproject.org/f28/s2i-core",
+      "BAZEL_VERSION": "0.11.0",
+      "TF_NEED_CUDA": "0"
+    },
+    "RHEL75": {
+      "S2I_IMAGE": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
+      "BAZEL_VERSION": "0.11.0",
+      "TF_NEED_CUDA": "0"
+    },
+    "Centos7": {
+      "S2I_IMAGE": "openshift/base-centos7",
+      "BAZEL_VERSION": "0.11.0",
+      "TF_NEED_CUDA": "0"
+    },
+    "Fedora27gpu": {
+      "S2I_IMAGE": "registry.fedoraproject.org/f27/s2i-core",
+      "BAZEL_VERSION": "0.15.0",
+      "TF_NEED_CUDA": "1"
+    },
+    "Fedora28gpu": {
+      "S2I_IMAGE": "registry.fedoraproject.org/f28/s2i-core",
+      "BAZEL_VERSION": "0.15.0",
+      "TF_NEED_CUDA": "1"
+    },
+    "RHEL75gpu": {
+      "S2I_IMAGE": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
+      "BAZEL_VERSION": "0.15.0",
+      "TF_NEED_CUDA": "1"
+    },
+    "Centos7gpu": {
+      "S2I_IMAGE": "openshift/base-centos7",
+      "BAZEL_VERSION": "0.15.0",
+      "TF_NEED_CUDA": "1"
+    }
+  }
 }

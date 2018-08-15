@@ -21,24 +21,30 @@ class TensorflowBuildTrigger:
             'Accept': 'application/json',
             'Connection': 'close'
         }
+        # Application Variables
         self.BUILD_MAP = os.getenv('BUILD_MAP', "{}")
 
-        # Buildconfig and Imagestream variables
+        # Resource Quota Variable
+        self.RESOURCE_QUOTA = os.getenv('RESOURCE_QUOTA', "1")
+        self.QUOTA_NAME = os.getenv('QUOTA_NAME')
+
+        # Buildconfig and Imagestream Variables
         self.GENERIC_WEBHOOK_SECRET = os.getenv('GENERIC_WEBHOOK_SECRET', 'tf-build-secret')
         self.SOURCE_REPOSITORY = os.getenv('SOURCE_REPOSITORY',
                                            'https://github.com/thoth-station/tensorflow-build-s2i.git')
         self.BAZEL_VERSION = os.getenv('BAZEL_VERSION', '0.11.0')
-        self.VERSION = os.getenv('VERSION', 'latest')
+        self.VERSION = os.getenv('VERSION', '1')
+        self.S2I_IMAGE = os.getenv('S2I_IMAGE')
 
-        # job variables
+        # Job Variables
         self.CUSTOM_BUILD = os.getenv('CUSTOM_BUILD', "bazel build --copt=-mavx --copt=-mavx2 --copt=-mfma "
                                                       "--copt=-mfpmath=both --copt=-msse4.2  "
-                                                      "--cxxopt='-D_GLIBCXX_USE_CXX11_ABI=0' --local_resources 2048,"
-                                                      "2.0,1.0 --verbose_failures "
+                                                      "--cxxopt='-D_GLIBCXX_USE_CXX11_ABI=0' "
+                                                      "--verbose_failures "
                                                       "//tensorflow/tools/pip_package:build_pip_package")
         self.BUILD_OPTS = os.getenv('BUILD_OPTS', "")
         self.TF_CUDA_VERSION = os.getenv('TF_CUDA_VERSION', "9.2")
-        self.TF_CUDA_COMPUTE_CAPABILITIES = os.getenv('TF_CUDA_COMPUTE_CAPABILITIES', "3.03.55.26.06.17.0")
+        self.TF_CUDA_COMPUTE_CAPABILITIES = os.getenv('TF_CUDA_COMPUTE_CAPABILITIES', '3.0,3.5,5.2,6.0,6.1,7.0')
         self.TF_CUDNN_VERSION = os.getenv('TF_CUDNN_VERSION', "7")
         self.CUDA_TOOLKIT_PATH = os.getenv('CUDA_TOOLKIT_PATH', "/usr/local/cuda")
         self.CUDNN_INSTALL_PATH = os.getenv('CUDNN_INSTALL_PATH', "/usr/local/cuda")
@@ -120,7 +126,7 @@ class TensorflowBuildTrigger:
             print("Error for Buildconfig GET request: ", buildconfig_get_response.text)
             return False
 
-    def builconfig_template(self, application_build_name, docker_file_path, s2i_image, nb_python_ver):
+    def builconfig_template(self, application_build_name, docker_file_path, nb_python_ver):
         buildconfig = {
             "kind": "BuildConfig",
             "apiVersion": "build.openshift.io/v1",
@@ -161,7 +167,7 @@ class TensorflowBuildTrigger:
                         "dockerfilePath": docker_file_path,
                         "from": {
                             "kind": "DockerImage",
-                            "name": s2i_image
+                            "name": self.S2I_IMAGE
                         },
                         "env": [
                             {
@@ -228,7 +234,8 @@ class TensorflowBuildTrigger:
             self.namespace,
             application_build_name,
             self.GENERIC_WEBHOOK_SECRET)
-        build_trigger_response = requests.post(build_trigger_api, json=trigger_payload, headers=self.headers, verify=False)
+        build_trigger_response = requests.post(build_trigger_api, json=trigger_payload, headers=self.headers,
+                                               verify=False)
         print("Status code for Build Webhook Trigger request: ", build_trigger_response.status_code)
         if build_trigger_response.status_code == 200:
             return True
@@ -286,6 +293,7 @@ class TensorflowBuildTrigger:
         if build_pod_logs.status_code == 200:
             with open('{}.txt'.format(build_pod), 'w') as f:
                 f.write(build_pod_logs.text)
+            print("Log of:", build_pod)
             return True
         else:
             print("Error for build pod log GET request: ", build_pod_logs.text)
@@ -513,35 +521,66 @@ class TensorflowBuildTrigger:
             print("Error for job DELETE request: ", job_delete_response.text)
             return False
 
+    def get_usable_Gi_quota(self, quota_val):
+        max_usable_quota = str(int(quota_val.strip("Gi")) - 10) + 'Gi'
+        return max_usable_quota
+
+    def get_usable_Mi_quota(self, quota_val):
+        max_usable_quota = str((int(quota_val.strip("Gi")) - 10) * 1000) + 'Mi'
+        return max_usable_quota
+
+    def get_resource_quota(self, quota_name):
+        resource_quota_endpoint = '{}/api/v1/namespaces/{}/resourcequotas/{}'.format(self.url, self.namespace,
+                                                                                     quota_name)
+        resource_quota_response = requests.get(resource_quota_endpoint, headers=self.headers, verify=False)
+        print("Status code for resource quota GET request: ", resource_quota_response.status_code)
+        if resource_quota_response.status_code == 200:
+            print("Resource Quota: ", resource_quota_response.json())
+            if 'status' in resource_quota_response.json() and resource_quota_response.json().get('status'):
+                quota = resource_quota_response.json().get('status')
+                print("Used Quota: \n CPU:{} \n Memory:{}".format(quota['used'].get("limits.cpu", ""),
+                                                                  quota['used'].get("limits.memory", "")))
+                if 'Gi' in quota['used'].get("limits.memory", "") and quota['used'].get(
+                        "limits.memory") > self.get_usable_Gi_quota(quota['hard'].get("limits.memory")):
+                    return True
+                if 'Mi' in quota['used'].get("limits.memory", "") and quota['used'].get(
+                        "limits.memory") > self.get_usable_Mi_quota(quota['hard'].get("limits.memory")):
+                    return True
+                if 'm' in quota['used'].get("limits.cpu", "") and quota['used'].get("limits.cpu") > str(
+                        (int(quota['hard'].get("limits.cpu")) - 6) * 1000) + 'm':
+                    return True
+                if quota['used'].get("limits.cpu") > str(int(quota['hard'].get("limits.cpu")) - 6):
+                    return True
+                return False
+            else:
+                print("Error for resource quota status request: ", resource_quota_response.text)
+                return False
+        else:
+            print("Error for resource quota GET request: ", resource_quota_response.text)
+            return False
+
     def main(self):
         if not self.url or not self.namespace or not self.access_token:
             raise Exception("Release Trigger can't start! OCP credentials are not provided!")
         if self.BUILD_MAP:
-            for py_version, os_detail in json.loads(self.BUILD_MAP).items():
-                for os_version, os_registry in os_detail.items():
+            for py_version, os_details in json.loads(self.BUILD_MAP).items():
+                for os_version, image_details in os_details.items():
                     try:
                         application_build_name = "tf-{}-build-image-{}".format(os_version.lower(),
                                                                                py_version.replace('.', ''))
                         application_name = 'tf-{}-build-job-{}'.format(os_version.lower(), py_version.replace('.', ''))
-                        s2i_image = os_registry
                         builder_imagesream = '{}:{}'.format(application_build_name, self.VERSION)
                         nb_python_ver = py_version
                         docker_file_path = 'Dockerfile.{}'.format(os_version.lower())
-                        if 'gpu' in os_version.lower():
-                            self.BAZEL_VERSION = '0.15.0'
-                            self.TF_NEED_CUDA = '1'
-                        else:
-                            self.BAZEL_VERSION = '0.11.0'
-                            self.TF_NEED_CUDA = '0'
                         print("-------------------VARIABLES-------------------------")
                         print("APPLICATION_BUILD_NAME: ", application_build_name)
                         print("APPLICATION_NAME: ", application_name)
-                        print("S2I_IMAGE: ", s2i_image)
                         print("BUILDER_IMAGESTREAM: ", builder_imagesream)
                         print("PYTHON VERSION: ", nb_python_ver)
                         print("DOCKERFILE: ", docker_file_path)
-                        print("BAZEL_VERSION: ", self.BAZEL_VERSION)
-                        print("TF_NEED_CUDA: ", self.TF_NEED_CUDA)
+                        for var_key, var_val in image_details.items():
+                            self.__dict__[var_key] = var_val
+                            print("{}: ".format(var_key), var_val)
                         print("-----------------------------------------------------")
                         if not self.get_imagestream(application_build_name=application_build_name):
                             imagestream = self.imagestream_template(application_build_name=application_build_name)
@@ -551,7 +590,7 @@ class TensorflowBuildTrigger:
                         if not self.get_buildconfig(application_build_name=application_build_name):
                             buildconfig = self.builconfig_template(application_build_name=application_build_name,
                                                                    docker_file_path=docker_file_path,
-                                                                   s2i_image=s2i_image, nb_python_ver=nb_python_ver)
+                                                                   nb_python_ver=nb_python_ver)
                             created_build = self.create_buildconfig(buildconfig=buildconfig)
                             if not created_build:
                                 raise Exception('Build could not be created for {}'.format(application_build_name))
@@ -577,10 +616,11 @@ class TensorflowBuildTrigger:
                                 build_pod_name = '{}-{}-build'.format(application_build_name, latest_build_id)
                                 log_status = self.get_logs(build_pod=build_pod_name)
                                 if log_status and 'gpg: keyserver receive failed: Keyserver error' in open(
-                                        build_pod_name).read():
+                                        build_pod_name + ".txt").read():
                                     trigger_status = self.trigger_build(application_build_name=application_build_name,
                                                                         nb_python_ver=nb_python_ver)
                                     if trigger_status:
+                                        print("Rebuild try:", tries + 1)
                                         latest_build_id = self.get_latest_build(
                                             application_build_name=application_build_name)
                                         status = self.get_status_build(
@@ -620,14 +660,25 @@ class TensorflowBuildTrigger:
                                         self.create_job(job=job)
 
                         else:
-                            raise Exception(
-                                "Build didn't complete successfully, Please check openshift events. Build {} status: {}".format(
-                                    application_build_name, status))
+                            raise Exception("Build didn't complete successfully, Please check openshift events. Build "
+                                            "{} status: {}".format(application_build_name, status))
                     except Exception as e:
                         print('Exception: ', e)
                         print('Error in Tensorflow Build or Job trigger! Please refer the above log, Starting the next '
                               'one in queue!')
                         pass
+                    print("IS RESOURCE QUOTA SET ?", self.RESOURCE_QUOTA)
+                    if self.RESOURCE_QUOTA == "1":
+                        if self.QUOTA_NAME:
+                            print("QUOTA_NAME", self.QUOTA_NAME)
+                            wait_quota = self.get_resource_quota(quota_name=self.QUOTA_NAME)
+                        else:
+                            print("QUOTA_NAME", '{}-quota'.format(self.namespace))
+                            wait_quota = self.get_resource_quota(quota_name='{}-quota'.format(self.namespace))
+                        while wait_quota:
+                            print("Waiting for available quota")
+                            time.sleep(180)
+                            wait_quota = self.get_resource_quota(quota_name='{}-quota'.format(self.namespace))
         else:
             raise Exception("Issue in BUILD_MAP!!!")
 

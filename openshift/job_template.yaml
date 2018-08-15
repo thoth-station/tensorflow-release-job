@@ -49,6 +49,12 @@ objects:
               secretKeyRef:
                 key: OCP_TOKEN
                 name: "${OCP_SECRET}"
+          - name: S2I_IMAGE
+            value: "${S2I_IMAGE}"
+          - name: RESOURCE_QUOTA
+            value: "${RESOURCE_QUOTA}"
+          - name: QUOTA_NAME
+            value: "${QUOTA_NAME}"
           - name: BAZEL_VERSION
             value: "${BAZEL_VERSION}"
           - name: CUSTOM_BUILD
@@ -119,11 +125,11 @@ objects:
             value: "${BUILD_MAP}"
           resources:
             requests:
-              memory: "2Gi"
-              cpu: "2"
+              memory: "1Gi"
+              cpu: "1"
             limits:
-              memory: "2Gi"
-              cpu: "2"
+              memory: "1Gi"
+              cpu: "1"
         restartPolicy: Never
         lookupPolicy:
           local: true
@@ -131,9 +137,20 @@ parameters:
   - name: OCP_SECRET
     description: Name of the secret config on openshift
     required: true
+  - name: RESOURCE_QUOTA
+    description: If resource quota check is to be executed or not
+    value: "1"
+    required: false
+  - name: QUOTA_NAME
+    description: Name of the resource quota on openshift
+    required: false
   - name: SOURCE_REPOSITORY
     description: Git repository for source.
     value: 'https://github.com/thoth-station/tensorflow-build-s2i.git'
+    required: true
+  - name: S2I_IMAGE
+    description: "registry.fedoraproject.org/f27/s2i-core, registry.fedoraproject.org/f28/s2i-core, registry.access.redhat.com/rhscl/s2i-core-rhel7"
+    value: "registry.fedoraproject.org/f27/s2i-core"
     required: true
   - name: BAZEL_VERSION
     description: BAZEL_VERSION
