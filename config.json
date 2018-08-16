@@ -3,126 +3,174 @@
     "Fedora27": {
       "S2I_IMAGE": "registry.fedoraproject.org/f27/s2i-core",
       "BAZEL_VERSION": "0.11.0",
-      "TF_NEED_CUDA": "0"
+      "TF_NEED_CUDA": "0",
+      "RESOURCE_LIMITS_CPU": "4",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Fedora28": {
       "S2I_IMAGE": "registry.fedoraproject.org/f28/s2i-core",
       "BAZEL_VERSION": "0.11.0",
-      "TF_NEED_CUDA": "0"
+      "TF_NEED_CUDA": "0",
+      "RESOURCE_LIMITS_CPU": "4",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "RHEL75": {
       "S2I_IMAGE": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
       "BAZEL_VERSION": "0.11.0",
-      "TF_NEED_CUDA": "0"
+      "TF_NEED_CUDA": "0",
+      "RESOURCE_LIMITS_CPU": "4",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Centos7": {
       "S2I_IMAGE": "openshift/base-centos7",
       "BAZEL_VERSION": "0.11.0",
-      "TF_NEED_CUDA": "0"
+      "TF_NEED_CUDA": "0",
+      "RESOURCE_LIMITS_CPU": "4",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Fedora27gpu": {
       "S2I_IMAGE": "registry.fedoraproject.org/f27/s2i-core",
       "BAZEL_VERSION": "0.15.0",
-      "TF_NEED_CUDA": "1"
+      "TF_NEED_CUDA": "1",
+      "RESOURCE_LIMITS_CPU": "6",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Fedora28gpu": {
       "S2I_IMAGE": "registry.fedoraproject.org/f28/s2i-core",
       "BAZEL_VERSION": "0.15.0",
-      "TF_NEED_CUDA": "1"
+      "TF_NEED_CUDA": "1",
+      "RESOURCE_LIMITS_CPU": "6",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "RHEL75gpu": {
       "S2I_IMAGE": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
       "BAZEL_VERSION": "0.15.0",
-      "TF_NEED_CUDA": "1"
+      "TF_NEED_CUDA": "1",
+      "RESOURCE_LIMITS_CPU": "6",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Centos7gpu": {
       "S2I_IMAGE": "openshift/base-centos7",
       "BAZEL_VERSION": "0.15.0",
-      "TF_NEED_CUDA": "1"
+      "TF_NEED_CUDA": "1",
+      "RESOURCE_LIMITS_CPU": "6",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     }
   },
   "3.5": {
     "Fedora27": {
       "S2I_IMAGE": "registry.fedoraproject.org/f27/s2i-core",
       "BAZEL_VERSION": "0.11.0",
-      "TF_NEED_CUDA": "0"
+      "TF_NEED_CUDA": "0",
+      "RESOURCE_LIMITS_CPU": "4",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Fedora28": {
       "S2I_IMAGE": "registry.fedoraproject.org/f28/s2i-core",
       "BAZEL_VERSION": "0.11.0",
-      "TF_NEED_CUDA": "0"
+      "TF_NEED_CUDA": "0",
+      "RESOURCE_LIMITS_CPU": "4",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "RHEL75": {
       "S2I_IMAGE": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
       "BAZEL_VERSION": "0.11.0",
-      "TF_NEED_CUDA": "0"
+      "TF_NEED_CUDA": "0",
+      "RESOURCE_LIMITS_CPU": "4",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Centos7": {
       "S2I_IMAGE": "openshift/base-centos7",
       "BAZEL_VERSION": "0.11.0",
-      "TF_NEED_CUDA": "0"
+      "TF_NEED_CUDA": "0",
+      "RESOURCE_LIMITS_CPU": "4",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Fedora27gpu": {
       "S2I_IMAGE": "registry.fedoraproject.org/f27/s2i-core",
       "BAZEL_VERSION": "0.15.0",
-      "TF_NEED_CUDA": "1"
+      "TF_NEED_CUDA": "1",
+      "RESOURCE_LIMITS_CPU": "6",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Fedora28gpu": {
       "S2I_IMAGE": "registry.fedoraproject.org/f28/s2i-core",
       "BAZEL_VERSION": "0.15.0",
-      "TF_NEED_CUDA": "1"
+      "TF_NEED_CUDA": "1",
+      "RESOURCE_LIMITS_CPU": "6",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "RHEL75gpu": {
       "S2I_IMAGE": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
       "BAZEL_VERSION": "0.15.0",
-      "TF_NEED_CUDA": "1"
+      "TF_NEED_CUDA": "1",
+      "RESOURCE_LIMITS_CPU": "6",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Centos7gpu": {
       "S2I_IMAGE": "openshift/base-centos7",
       "BAZEL_VERSION": "0.15.0",
-      "TF_NEED_CUDA": "1"
+      "TF_NEED_CUDA": "1",
+      "RESOURCE_LIMITS_CPU": "6",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     }
   },
   "3.6": {
     "Fedora27": {
       "S2I_IMAGE": "registry.fedoraproject.org/f27/s2i-core",
       "BAZEL_VERSION": "0.11.0",
-      "TF_NEED_CUDA": "0"
+      "TF_NEED_CUDA": "0",
+      "RESOURCE_LIMITS_CPU": "4",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Fedora28": {
       "S2I_IMAGE": "registry.fedoraproject.org/f28/s2i-core",
       "BAZEL_VERSION": "0.11.0",
-      "TF_NEED_CUDA": "0"
+      "TF_NEED_CUDA": "0",
+      "RESOURCE_LIMITS_CPU": "4",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "RHEL75": {
       "S2I_IMAGE": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
       "BAZEL_VERSION": "0.11.0",
-      "TF_NEED_CUDA": "0"
+      "TF_NEED_CUDA": "0",
+      "RESOURCE_LIMITS_CPU": "4",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Centos7": {
       "S2I_IMAGE": "openshift/base-centos7",
       "BAZEL_VERSION": "0.11.0",
-      "TF_NEED_CUDA": "0"
+      "TF_NEED_CUDA": "0",
+      "RESOURCE_LIMITS_CPU": "4",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Fedora27gpu": {
       "S2I_IMAGE": "registry.fedoraproject.org/f27/s2i-core",
       "BAZEL_VERSION": "0.15.0",
-      "TF_NEED_CUDA": "1"
+      "TF_NEED_CUDA": "1",
+      "RESOURCE_LIMITS_CPU": "6",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Fedora28gpu": {
       "S2I_IMAGE": "registry.fedoraproject.org/f28/s2i-core",
       "BAZEL_VERSION": "0.15.0",
-      "TF_NEED_CUDA": "1"
+      "TF_NEED_CUDA": "1",
+      "RESOURCE_LIMITS_CPU": "6",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "RHEL75gpu": {
       "S2I_IMAGE": "registry.access.redhat.com/rhscl/s2i-core-rhel7",
       "BAZEL_VERSION": "0.15.0",
-      "TF_NEED_CUDA": "1"
+      "TF_NEED_CUDA": "1",
+      "RESOURCE_LIMITS_CPU": "6",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     },
     "Centos7gpu": {
       "S2I_IMAGE": "openshift/base-centos7",
       "BAZEL_VERSION": "0.15.0",
-      "TF_NEED_CUDA": "1"
+      "TF_NEED_CUDA": "1",
+      "RESOURCE_LIMITS_CPU": "6",
+      "RESOURCE_LIMITS_MEMORY": "8Gi"
     }
   }
 }

@@ -20,7 +20,9 @@ A application for triggering new builds and jobs for tensorflow-build releases.
 		"os_version": {
 			"S2I_IMAGE": "os_registry",
 			"BAZEL_VERSION": "bazel_version",
-			"TF_NEED_CUDA": "{1|0}"
+			"TF_NEED_CUDA": "{1|0}",
+			"RESOURCE_LIMITS_CPU": "4",
+			"RESOURCE_LIMITS_MEMORY": "8Gi"
 		}
 	}
 }
@@ -29,8 +31,6 @@ A application for triggering new builds and jobs for tensorflow-build releases.
 ##### Check for the Resource Quota:
 
 - The functionality of resource quota check while triggering builds and jobs is provided in the application. Required variables to set:
-
-	**NOTE:** Resource quota logic is defined based upon job resource. If limits are changed please make sure to change the required changes in resource quota check modules.
 
 	To Set the name of the resource quota:</br>
 	- `QUOTA_NAME = <resource_quota_name> (default: <namespace>-quota )`</br>

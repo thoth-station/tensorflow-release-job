@@ -51,6 +51,10 @@ objects:
                 name: "${OCP_SECRET}"
           - name: S2I_IMAGE
             value: "${S2I_IMAGE}"
+          - name: RESOURCE_LIMITS_CPU
+            value: "${RESOURCE_LIMITS_CPU}"
+          - name: RESOURCE_LIMITS_MEMORY
+            value: "${RESOURCE_LIMITS_MEMORY}"
           - name: RESOURCE_QUOTA
             value: "${RESOURCE_QUOTA}"
           - name: QUOTA_NAME
@@ -136,6 +140,14 @@ objects:
 parameters:
   - name: OCP_SECRET
     description: Name of the secret config on openshift
+    required: true
+  - name: RESOURCE_LIMITS_CPU
+    description: Resource limits for Openshft quota CPU
+    value: "4"
+    required: true
+  - name: RESOURCE_LIMITS_MEMORY
+    description: Resource limits for Openshft quota Memory
+    value: "8Gi"
     required: true
   - name: RESOURCE_QUOTA
     description: If resource quota check is to be executed or not

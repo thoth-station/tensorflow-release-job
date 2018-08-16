@@ -27,6 +27,8 @@ class TensorflowBuildTrigger:
         # Resource Quota Variable
         self.RESOURCE_QUOTA = os.getenv('RESOURCE_QUOTA', "1")
         self.QUOTA_NAME = os.getenv('QUOTA_NAME')
+        self.RESOURCE_LIMITS_CPU = os.getenv('RESOURCE_LIMITS_CPU')
+        self.RESOURCE_LIMITS_MEMORY = os.getenv('RESOURCE_LIMITS_MEMORY')
 
         # Buildconfig and Imagestream Variables
         self.GENERIC_WEBHOOK_SECRET = os.getenv('GENERIC_WEBHOOK_SECRET', 'tf-build-secret')
@@ -189,12 +191,12 @@ class TensorflowBuildTrigger:
                 },
                 "resources": {
                     "limits": {
-                        "cpu": "4",
-                        "memory": "8Gi"
+                        "cpu": self.RESOURCE_LIMITS_CPU,
+                        "memory": self.RESOURCE_LIMITS_MEMORY
                     },
                     "requests": {
-                        "cpu": "4",
-                        "memory": "8Gi"
+                        "cpu": self.RESOURCE_LIMITS_CPU,
+                        "memory": self.RESOURCE_LIMITS_MEMORY
                     }
                 }
             }
@@ -457,12 +459,12 @@ class TensorflowBuildTrigger:
                                 "command": ["/entrypoint", "/usr/libexec/s2i/run"],
                                 "resources": {
                                     "limits": {
-                                        "cpu": "4",
-                                        "memory": "8Gi"
+                                        "cpu": self.RESOURCE_LIMITS_CPU,
+                                        "memory": self.RESOURCE_LIMITS_MEMORY
                                     },
                                     "requests": {
-                                        "cpu": "4",
-                                        "memory": "8Gi"
+                                        "cpu": self.RESOURCE_LIMITS_CPU,
+                                        "memory": self.RESOURCE_LIMITS_MEMORY
                                     }
                                 }
                             }
@@ -522,11 +524,12 @@ class TensorflowBuildTrigger:
             return False
 
     def get_usable_Gi_quota(self, quota_val):
-        max_usable_quota = str(int(quota_val.strip("Gi")) - 10) + 'Gi'
+        max_usable_quota = str(int(quota_val.strip("Gi")) - (int(self.RESOURCE_LIMITS_MEMORY.strip("Gi")) + 3)) + 'Gi'
         return max_usable_quota
 
     def get_usable_Mi_quota(self, quota_val):
-        max_usable_quota = str((int(quota_val.strip("Gi")) - 10) * 1000) + 'Mi'
+        max_usable_quota = str(
+            (int(quota_val.strip("Gi")) - (int(self.RESOURCE_LIMITS_MEMORY.strip("Gi")) + 3)) * 1000) + 'Mi'
         return max_usable_quota
 
     def get_resource_quota(self, quota_name):
@@ -547,9 +550,10 @@ class TensorflowBuildTrigger:
                         "limits.memory") > self.get_usable_Mi_quota(quota['hard'].get("limits.memory")):
                     return True
                 if 'm' in quota['used'].get("limits.cpu", "") and quota['used'].get("limits.cpu") > str(
-                        (int(quota['hard'].get("limits.cpu")) - 6) * 1000) + 'm':
+                        (int(quota['hard'].get("limits.cpu")) - (int(self.RESOURCE_LIMITS_CPU) + 3)) * 1000) + 'm':
                     return True
-                if quota['used'].get("limits.cpu") > str(int(quota['hard'].get("limits.cpu")) - 6):
+                if quota['used'].get("limits.cpu") > str(
+                        int(quota['hard'].get("limits.cpu")) - (int(self.RESOURCE_LIMITS_CPU) + 3)):
                     return True
                 return False
             else:
