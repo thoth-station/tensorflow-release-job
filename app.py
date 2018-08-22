@@ -524,12 +524,11 @@ class TensorflowBuildTrigger:
             return False
 
     def get_usable_Gi_quota(self, quota_val):
-        max_usable_quota = str(int(quota_val.strip("Gi")) - (int(self.RESOURCE_LIMITS_MEMORY.strip("Gi")) + 3)) + 'Gi'
+        max_usable_quota = int(quota_val.strip("Gi")) - int(self.RESOURCE_LIMITS_MEMORY.strip("Gi")) + 3
         return max_usable_quota
 
     def get_usable_Mi_quota(self, quota_val):
-        max_usable_quota = str(
-            (int(quota_val.strip("Gi")) - (int(self.RESOURCE_LIMITS_MEMORY.strip("Gi")) + 3)) * 1000) + 'Mi'
+        max_usable_quota = int(quota_val.strip("Gi")) - ((int(self.RESOURCE_LIMITS_MEMORY.strip("Gi")) + 3) * 1000)
         return max_usable_quota
 
     def get_resource_quota(self, quota_name):
@@ -543,17 +542,17 @@ class TensorflowBuildTrigger:
                 quota = resource_quota_response.json().get('status')
                 print("Used Quota: \n CPU:{} \n Memory:{}".format(quota['used'].get("limits.cpu", ""),
                                                                   quota['used'].get("limits.memory", "")))
-                if 'Gi' in quota['used'].get("limits.memory", "") and quota['used'].get(
-                        "limits.memory") > self.get_usable_Gi_quota(quota['hard'].get("limits.memory")):
+                if 'Gi' in quota['used'].get("limits.memory", "") and int(quota['used'].get(
+                        "limits.memory").strip('Gi')) > self.get_usable_Gi_quota(quota['hard'].get("limits.memory")):
                     return True
-                if 'Mi' in quota['used'].get("limits.memory", "") and quota['used'].get(
-                        "limits.memory") > self.get_usable_Mi_quota(quota['hard'].get("limits.memory")):
+                elif 'Mi' in quota['used'].get("limits.memory", "") and int(quota['used'].get(
+                        "limits.memory").strip('Mi')) > self.get_usable_Mi_quota(quota['hard'].get("limits.memory")):
                     return True
-                if 'm' in quota['used'].get("limits.cpu", "") and quota['used'].get("limits.cpu") > str(
-                        (int(quota['hard'].get("limits.cpu")) - (int(self.RESOURCE_LIMITS_CPU) + 3)) * 1000) + 'm':
+                if 'm' in quota['used'].get("limits.cpu", "") and int(quota['used'].get("limits.cpu").strip('m')) > int(
+                        quota['hard'].get("limits.cpu")) - ((int(self.RESOURCE_LIMITS_CPU) + 3) * 1000):
                     return True
-                if quota['used'].get("limits.cpu") > str(
-                        int(quota['hard'].get("limits.cpu")) - (int(self.RESOURCE_LIMITS_CPU) + 3)):
+                elif 'm' not in quota['used'].get("limits.cpu", "") and int(quota['used'].get("limits.cpu")) > int(
+                        quota['hard'].get("limits.cpu")) - (int(self.RESOURCE_LIMITS_CPU) + 3):
                     return True
                 return False
             else:
