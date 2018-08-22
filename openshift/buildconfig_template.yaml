@@ -1,29 +1,29 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: tensorflow-trigger-buildconfig
+  name: tensorflow-release-buildconfig
   annotations:
     description: This is Thoth - tensorflow build
     openshift.io/display-name: Thoth Core
     version: 0.4.0
-    tags: poc,thoth,tensorflow-trigger,ai-stacks
+    tags: poc,thoth,tensorflow-release,ai-stacks
     template.openshift.io/documentation-url: https://github.com/Thoth-Station/
     template.openshift.io/long-description: >
-      This template defines resources needed to deploy Buildconfig and Deploymentconfig for tensorflow-trigger-job to OpenShift.
+      This template defines resources needed to deploy Buildconfig and Deploymentconfig for tensorflow-release-job to OpenShift.
     template.openshift.io/provider-display-name: Red Hat, Inc.
   labels:
-    template: tensorflow-trigger-buildconfig
+    template: tensorflow-release-buildconfig
     app: thoth
-    component: tensorflow-trigger
+    component: tensorflow-release
 
 objects:
   - kind: BuildConfig
     apiVersion: v1
     metadata:
-      name: tensorflow-trigger
+      name: tensorflow-release
       labels:
         app: thoth
-        component: tensorflow-trigger
+        component: tensorflow-release
 
     spec:
       resources:
@@ -36,7 +36,7 @@ objects:
       output:
         to:
           kind: ImageStreamTag
-          name: 'tensorflow-trigger:${IMAGE_STREAM_TAG}'
+          name: 'tensorflow-release:${IMAGE_STREAM_TAG}'
       source:
         type: Git
         git:
@@ -65,7 +65,7 @@ objects:
     metadata:
       labels:
         app: thoth
-      name: tensorflow-trigger
+      name: tensorflow-release
     spec:
       name: latest
       lookupPolicy:
@@ -76,7 +76,7 @@ parameters:
     displayName: Git Repository
     required: true
     name: GITHUB_URL
-    value: 'https://github.com/thoth-station/tensorflow-trigger-job'
+    value: 'https://github.com/thoth-station/tensorflow-release-job'
 
   - description: Git reference to be used for Thoth's Tensorflow Trigger Job
     displayName: Git Reference

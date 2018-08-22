@@ -1,20 +1,20 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: tensorflow-trigger-deployment
+  name: tensorflow-release-deployment
   annotations:
     description: This is Thoth - tensorflow build
     openshift.io/display-name: Thoth Core
     version: 0.4.0
-    tags: poc,thoth,tensorflow-trigger,ai-stacks
+    tags: poc,thoth,tensorflow-release,ai-stacks
     template.openshift.io/documentation-url: https://github.com/Thoth-Station/
     template.openshift.io/long-description: >
-      This template defines resources needed to deploy Buildconfig and Deploymentconfig for tensorflow-trigger-job to OpenShift.
+      This template defines resources needed to deploy Buildconfig and Deploymentconfig for tensorflow-release-job to OpenShift.
     template.openshift.io/provider-display-name: Red Hat, Inc.
   labels:
-    template: tensorflow-trigger-deployment
+    template: tensorflow-release-deployment
     app: thoth
-    component: tensorflow-trigger
+    component: tensorflow-release
 
 objects:
   - apiVersion: v1
@@ -22,20 +22,20 @@ objects:
     metadata:
       labels:
         app: thoth
-        component: tensorflow-trigger
-      name: tensorflow-trigger
+        component: tensorflow-release
+      name: tensorflow-release
     spec:
       replicas: 1
       selector:
-        name: tensorflow-trigger
+        name: tensorflow-release
       template:
         metadata:
           labels:
-            name: tensorflow-trigger
+            name: tensorflow-release
         spec:
           containers:
-            - name: tensorflow-trigger
-              image: tensorflow-trigger
+            - name: tensorflow-release
+              image: tensorflow-release
               env:
                 - name: OCP_URL
                   valueFrom:
@@ -137,10 +137,10 @@ objects:
           imageChangeParams:
             automatic: true
             containerNames:
-              - tensorflow-trigger
+              - tensorflow-release
             from:
               kind: ImageStreamTag
-              name: 'tensorflow-trigger:latest'
+              name: 'tensorflow-release:latest'
 parameters:
   - name: OCP_SECRET
     description: Name of the secret config on openshift
