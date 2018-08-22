@@ -1,0 +1,25 @@
+---
+- name: Playbook to provision TensorFlow Builds
+  tags:
+    - openshift
+    - thoth
+
+  hosts: localhost
+  vars:
+    OCP_URL: "{{ lookup('env','OCP_URL') }}"
+    OCP_TOKEN: "{{ lookup('env','OCP_TOKEN') }}"
+    OCP_NAMESPACE: "{{ lookup('env','OCP_NAMESPACE') }}"
+
+  gather_facts: false
+  connection: local
+  tasks:
+    - name: "login to OpenShift using provided token"
+      command: "oc login {{ OCP_URL }} --insecure-skip-tls-verify=true --token {{ OCP_TOKEN }}"
+      changed_when: false
+
+    - name: "deleting Objects"
+      command: "oc delete {{ item }} --namespace {{ OCP_NAMESPACE }}"
+      ignore_errors: true
+      with_items:
+        - "job/tensorflow-release-job"
+        - "template/tensorflow-release-job"
